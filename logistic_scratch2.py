@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 np.random.seed(12)
 num_observations = 5000
@@ -19,11 +20,12 @@ simulated_labels = np.hstack((np.zeros(num_observations),
 ####### SCRATCH IMPLEMENTATION OF LOGISTIC REGRESSION
 class Logistic_regression_custom_reg():
 
-    def __init__(self, num_steps, learning_rate=1e-2, C = 1.0, add_intercept = False):
+    def __init__(self, num_steps, learning_rate=1e-2, C = 1.0, tolerance=1e-5, add_intercept = False):
         self.num_steps = num_steps
         self.learning_rate = learning_rate
         self.C = C
         self.add_intercept = add_intercept
+        self.tolerance = tolerance
 
     def sigmoid(self, scores):
         return 1 / (1 + np.exp(-scores))
@@ -41,6 +43,7 @@ class Logistic_regression_custom_reg():
             
         self.weights = np.zeros(features.shape[1])
         
+        old_ll = sys.maxsize
         for step in xrange(self.num_steps):
             scores = np.dot(features, self.weights)
             predictions = self.sigmoid(scores)
@@ -51,7 +54,15 @@ class Logistic_regression_custom_reg():
             self.weights += delta_w
             
             if step % 10000 == 0:
-                print self.reg_logLiklihood(features, target)
+                new_ll = self.reg_logLiklihood(features, target)
+                if new_ll>old_ll: break
+                print new_ll
+
+            if np.all(abs(delta_w) <= self.tolerance): 
+                break
+
+            old_ll = new_ll
+
 
     def predict_proba(self, features):
         z = self.weights[0] + np.dot(features, self.weights[1:])        
@@ -59,14 +70,14 @@ class Logistic_regression_custom_reg():
         return probs
 
 
-model = Logistic_regression_custom_reg(num_steps = 300000, learning_rate = 7e-7, C = 1.0, add_intercept=True)
+model = Logistic_regression_custom_reg(num_steps = 300000, learning_rate = 7e-7, C = 10.0, add_intercept=True)
 model.fit(simulated_separableish_features, simulated_labels)
 scratch_probs = model.predict_proba(simulated_separableish_features)
 
 ####### SKLEARN RESULTS
 from sklearn.linear_model import LogisticRegression
 
-clf = LogisticRegression(fit_intercept=True, C = 1.0)
+clf = LogisticRegression(fit_intercept=True, C = 10.0)
 clf.fit(simulated_separableish_features, simulated_labels)
 sklearn_probs = clf.predict_proba(simulated_separableish_features)[:,1]
 
