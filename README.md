@@ -1,0 +1,2 @@
+# logistic_regression_scratch_with_sklearn_results
+Regularized Logistic Regression written from scratch to reproduce SKLEARN results
